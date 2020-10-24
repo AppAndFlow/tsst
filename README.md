@@ -1,5 +1,7 @@
 # Typescript Shared Types (or tsst)
 
+[![npm (scoped)](https://img.shields.io/npm/v/@appandflow/tsst.svg)](https://www.npmjs.com/package/@appandflow/tsst)
+
 ## Features
 
 - **Allows you to centralize all of your types for one project liberating you from having to copy/paste them on each of your project's platform (web, backend, mobile etc)**
