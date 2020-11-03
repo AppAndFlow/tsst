@@ -41,7 +41,7 @@ Also, this tool might play nice with a git pre-commit hook or a post-commit hook
 }
 ```
 
-**2 - Initialization. You only need to do that at one place in your whole project ecosystem.**
+**2 - Initialization. You only need to do that the first time in each projects/components of your ecosystem **
 
 This will guide you through the only few steps required to use this tool.
 
@@ -53,10 +53,10 @@ This will guide you through the only few steps required to use this tool.
 
 Make sure to store all of the types you wish to share under the folder /sharedTypes/\*.
 This folder will be generated when you run "npm run tsst init" or the first time you run
-"npm run tsst update"
+"npm run tsst sync"
 
 ```
-  npm run tsst update
+  npm run tsst sync
 ```
 
 You might have some merge conflicts sometimes. Nothing new here - you open your text editor

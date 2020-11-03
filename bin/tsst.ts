@@ -5,10 +5,10 @@ import { command } from 'execa';
 import fetch from 'node-fetch';
 const readline = require('readline');
 
-const configPath = './sharedTypes/sharedTypes.json';
-const localTypePath = './sharedTypes';
+let localTypePath = './src/sharedTypes';
+const configPath = `${localTypePath}/sharedTypes.json`;
 const tmpPath = '.tmp';
-const tmpTypePath = './.tmp/sharedTypes';
+let tmpTypePath = `./.tmp/${localTypePath}`;
 const gitPath = '.git';
 const gitPathTmp = '.gitTmp';
 const remoteOriginName = 'sharedTypes';
@@ -16,7 +16,7 @@ const remoteOriginName = 'sharedTypes';
 let globalUsername = '';
 
 program
-  .version('1.0.0')
+  .version('0.0.1')
   .usage('[options] <action>')
   .arguments('<action>')
   .action(main)
@@ -39,12 +39,12 @@ function createQuestion(q: string): Promise<string> {
 async function main(action: string) {
   if (action === 'init') {
     await init();
-  } else if (action === 'update') {
+  } else if (action === 'sync') {
     const username = await createQuestion('What is your github username ?');
     globalUsername = username;
     await updateTypes();
   } else {
-    console.error('Invalid action. Please enter "init" or "update".');
+    console.error('Invalid action. Please enter "init" or "sync".');
     process.exit(1);
   }
 }
@@ -72,6 +72,14 @@ async function init() {
 
   if (shouldCreateRepo) {
     const name = await createQuestion('What is your project name ?');
+
+    const editedLocalTypePath = await createQuestion(
+      `Would you like to change the sharedTypes directory ? Leave empty to use the default one: "${localTypePath}"`,
+    );
+
+    if (editedLocalTypePath.length) {
+      localTypePath = editedLocalTypePath;
+    }
 
     const githubToken = await createQuestion(
       'In order to init the type repo for you, ts-sharedTypes needs a github access token. Please paste one here: ',
@@ -138,7 +146,7 @@ async function init() {
 
   // create the required folders and files
   await fs.ensureDir(localTypePath);
-  await fs.outputJSON(configPath, { typesRepoURL });
+  await fs.outputJSON(configPath, { typesRepoURL, localTypePath });
   await fs.ensureFile(`${localTypePath}/index.ts`);
   await delay(1000 * 5);
   await deleteReadMe();
@@ -206,6 +214,7 @@ async function pushToRepo() {
 interface Config {
   typesRepoURL: string;
   currentRepoURL: string;
+  localTypePath?: string;
 }
 
 async function readConfig(options?: { username: string }): Promise<Config> {
@@ -220,6 +229,12 @@ async function readConfig(options?: { username: string }): Promise<Config> {
     'github.com/',
     `${usernameToUse}@github.com/`,
   );
+
+  if (config.localTypePath) {
+    localTypePath = config.localTypePath;
+    tmpTypePath = `./.tmp/${localTypePath}`;
+  }
+
   return config;
 }
 
@@ -240,12 +255,10 @@ async function updateRepoTypes() {
     await command(`git clone ${config.typesRepoURL} ${tmpPath}`);
 
     await fs.copy(localTypePath, tmpTypePath);
-    await command(`git add ./sharedTypes`, {
+    await command(`git add ${localTypePath}`, {
       cwd: tmpPath,
     });
-    await command(`git reset -- ${configPath}`, {
-      cwd: tmpPath,
-    });
+
     await command(
       `git commit ${localTypePath} -m ts-sharedTypes_updateTypes `,
       {
